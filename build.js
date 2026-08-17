@@ -12,16 +12,12 @@ if (css.includes('</style>') || app.includes('</script>') || games.includes('</s
   process.exit(1);
 }
 
-let out = html.replace('<link rel="stylesheet" href="style.css">', () => '<style>\n' + css + '\n</style>');
-
-const pair = '<script src="app.js"></script>\n<script src="games.js"></script>';
-if (out.includes(pair)) {
-  out = out.replace(pair, () => '<script>\n' + app + '\n</script>\n<script>\n' + games + '\n</script>');
-} else {
-  out = out
-    .replace('<script src="app.js"></script>', () => '<script>\n' + app + '\n</script>')
-    .replace('<script src="games.js"></script>', () => '<script>\n' + games + '\n</script>');
-}
+let out = html.replace(/<link rel="stylesheet" href="style\.css(?:\?[^"]*)?"\s*>/,
+  () => '<style>\n' + css + '\n</style>');
+out = out.replace(/<script src="app\.js(?:\?[^"]*)?"\s*><\/script>/,
+  () => '<script>\n' + app + '\n</script>');
+out = out.replace(/<script src="games\.js(?:\?[^"]*)?"\s*><\/script>/,
+  () => '<script>\n' + games + '\n</script>');
 
 fs.writeFileSync(path.join(dir, 'casino.html'), out);
 console.log('OK: casino.html собрано (' + Math.round(out.length / 1024) + ' КБ)');
