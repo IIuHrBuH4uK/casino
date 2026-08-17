@@ -426,6 +426,34 @@ main { flex: 1; padding: 24px 18px 40px; max-width: 1100px; width: 100%; margin:
   outline: none;
 }
 .cheat-row input:focus { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+.cheat-sep {
+  margin-top: 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.cheat-hint { margin-top: 8px; font-size: 11px; color: var(--dim); }
+.cheat-syms .cheat-sym { font-size: 18px; padding: 8px 10px; }
+.cheat-syms .cheat-sym.active {
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.85), 0 0 0 2px var(--gold);
+  color: var(--gold);
+}
+.cheat-save {
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+  font-family: inherit;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+}
 
 /* ---------- Autoplay ---------- */
 .autoplay { display: flex; align-items: center; gap: 8px; }
@@ -965,6 +993,37 @@ main { flex: 1; padding: 24px 18px 40px; max-width: 1100px; width: 100%; margin:
       <button id="btnCheatAdd10000" class="btn gold">+10000 ₽</button>
       <button id="btnCheatClearCredit" class="btn pink">Списать долг</button>
     </div>
+    <div class="cheat-sep">Перерождения и удача</div>
+    <div class="cheat-row">
+      <input id="cheatRebirths" type="number" min="0" max="20" step="1" value="0" placeholder="Перерождений">
+      <button id="btnCheatRebirthSet" class="btn gold">Установить</button>
+    </div>
+    <div class="cheat-row">
+      <button id="btnCheatRebirthUp" class="btn gold">+1 Перерождение</button>
+      <button id="btnCheatRebirthDown" class="btn pink">−1 Перерождение</button>
+      <button id="btnCheatRebirthMax" class="btn gold">Макс (100%)</button>
+    </div>
+    <div class="cheat-hint">Удача = 5% за перерождение, до 100% на 20 перерождениях.</div>
+    <div class="cheat-sep">Автовыигрыш</div>
+    <div class="cheat-row">
+      <button id="btnCheatAutoWin" class="btn gold">Автовыигрыш: ВЫКЛ</button>
+    </div>
+    <div class="cheat-sep">Символы слотов</div>
+    <div class="cheat-row cheat-syms">
+      <button class="btn ghost cheat-sym" data-sym="🍒">🍒</button>
+      <button class="btn ghost cheat-sym" data-sym="🍋">🍋</button>
+      <button class="btn ghost cheat-sym" data-sym="🍇">🍇</button>
+      <button class="btn ghost cheat-sym" data-sym="🔔">🔔</button>
+      <button class="btn ghost cheat-sym" data-sym="💎">💎</button>
+      <button class="btn ghost cheat-sym" data-sym="7">7</button>
+      <button class="btn ghost cheat-sym" data-sym="">Случайно</button>
+    </div>
+    <div class="cheat-sep">Сохранение</div>
+    <div class="cheat-row">
+      <button id="btnCheatExport" class="btn gold">📤 Экспорт сейва</button>
+      <button id="btnCheatImport" class="btn gold">📥 Импортировать</button>
+    </div>
+    <textarea id="cheatSaveArea" class="cheat-save" rows="3" placeholder="Сюда вставится сейв для копирования / сюда вставь сейв для импорта"></textarea>
   </div>
 </div>
 
@@ -1040,6 +1099,8 @@ const Casino = (() => {
       maxWin: 0,
       blocked: false,
       rebirths: 0,
+      autoWin: false,
+      cheatSymbol: null,
       log: [],
       gameStats: {},
     };
@@ -1251,6 +1312,71 @@ const Casino = (() => {
     addLog('cheat', 'Чит: долг по кредиту списан');
     save(); updateHeader(); renderBank();
     notify('Чит: долг по кредиту списан', 'ok');
+  }
+
+  function cheatRebirth(delta) {
+    delta = Math.floor(Number(delta));
+    if (!isFinite(delta)) return notify('Введите число', 'warn');
+    const cur = state.rebirths || 0;
+    const next = Math.min(20, Math.max(0, cur + delta));
+    if (next === cur) return notify('Перерождений уже ' + cur + (cur >= 20 ? ' (максимум)' : ''), 'warn');
+    state.rebirths = next;
+    addLog('cheat', 'Чит: перерождений: ' + cur + ' → ' + next);
+    save(); updateHeader(); renderBank();
+    notify('Чит: перерождений ' + cur + ' → ' + next + ' · удача ' + Math.round(luckBias() * 100) + '%', 'ok');
+  }
+
+  function cheatToggleAutoWin() {
+    state.autoWin = !state.autoWin;
+    addLog('cheat', 'Чит: автовыигрыш ' + (state.autoWin ? 'включён' : 'выключен'));
+    save(); updateCheatUI();
+    notify('Чит: автовыигрыш ' + (state.autoWin ? 'включён' : 'выключен'), 'ok');
+  }
+
+  function cheatSetSymbol(sym) {
+    state.cheatSymbol = sym || null;
+    addLog('cheat', 'Чит: символ слотов — ' + (state.cheatSymbol || 'случайный'));
+    save(); updateCheatUI();
+    notify('Чит: символ слотов — ' + (state.cheatSymbol || 'случайный'), 'ok');
+  }
+
+  function cheatExportSave() {
+    const bytes = new TextEncoder().encode(JSON.stringify(state));
+    let bin = '';
+    bytes.forEach((b) => { bin += String.fromCharCode(b); });
+    return btoa(bin);
+  }
+
+  function cheatImportSave(str) {
+    const trimmed = String(str || '').trim();
+    let obj = null;
+    try { obj = JSON.parse(trimmed); } catch (e) { /* попробуем base64 */ }
+    if (!obj) {
+      try {
+        const bin = atob(trimmed);
+        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+        obj = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (e2) { /* неверный формат */ }
+    }
+    if (!obj || typeof obj.balance !== 'number') return notify('Некорректный сейв', 'warn');
+    const base = defaultState();
+    Object.keys(base).forEach((k) => { if (obj[k] === undefined) obj[k] = base[k]; });
+    Object.assign(state, obj);
+    save(); updateHeader(); renderBank(); updateCheatUI();
+    addLog('cheat', 'Чит: сейв импортирован');
+    notify('Чит: сейв импортирован', 'ok');
+    return true;
+  }
+
+  function updateCheatUI() {
+    const ab = $('#btnCheatAutoWin');
+    if (ab) {
+      ab.textContent = 'Автовыигрыш: ' + (state.autoWin ? 'ВКЛ' : 'ВЫКЛ');
+      ab.classList.toggle('active', state.autoWin);
+    }
+    document.querySelectorAll('.cheat-sym').forEach((b) => {
+      b.classList.toggle('active', (b.dataset.sym || '') === (state.cheatSymbol || ''));
+    });
   }
 
   /* ---------------- Luck / Rebirth ---------------- */
@@ -1488,6 +1614,22 @@ const Casino = (() => {
     $('#btnCheatAdd1000').onclick = () => cheatAddMoney(1000);
     $('#btnCheatAdd10000').onclick = () => cheatAddMoney(10000);
     $('#btnCheatClearCredit').onclick = cheatClearCredit;
+    $('#btnCheatRebirthUp').onclick = () => cheatRebirth(1);
+    $('#btnCheatRebirthDown').onclick = () => cheatRebirth(-1);
+    $('#btnCheatRebirthMax').onclick = () => cheatRebirth(20);
+    $('#btnCheatRebirthSet').onclick = () => cheatRebirth(($('#cheatRebirths').value || 0) - (state.rebirths || 0));
+    $('#btnCheatAutoWin').onclick = cheatToggleAutoWin;
+    $('#btnCheatExport').onclick = () => {
+      const s = cheatExportSave();
+      $('#cheatSaveArea').value = s;
+      try { navigator.clipboard.writeText(s); } catch (e) { /* ignore */ }
+      notify('Сейв скопирован в поле', 'ok');
+    };
+    $('#btnCheatImport').onclick = () => cheatImportSave($('#cheatSaveArea').value);
+    document.querySelectorAll('.cheat-sym').forEach((b) => {
+      b.onclick = () => cheatSetSymbol(b.dataset.sym || null);
+    });
+    updateCheatUI();
 
     $('#btnHistory').onclick = () => { renderHistory(); $('#historyModal').classList.remove('hidden'); };
     $('#btnCloseHistory').onclick = () => $('#historyModal').classList.add('hidden');
@@ -1539,6 +1681,11 @@ const Casino = (() => {
     applyInterest,
     cheatAddMoney,
     cheatClearCredit,
+    cheatRebirth,
+    cheatToggleAutoWin,
+    cheatSetSymbol,
+    cheatExportSave,
+    cheatImportSave,
     doRebirth,
     luck,
     luckBias,
@@ -1760,9 +1907,9 @@ Casino.registerGame({
       wctx.stroke();
 
       wctx.beginPath();
-      wctx.moveTo(WCX, 12);
-      wctx.lineTo(WCX - 11, 27);
-      wctx.lineTo(WCX + 11, 27);
+      wctx.moveTo(WCX, 27);
+      wctx.lineTo(WCX - 11, 12);
+      wctx.lineTo(WCX + 11, 12);
       wctx.closePath();
       wctx.fillStyle = '#ff3860';
       wctx.shadowColor = '#ff3860';
@@ -2039,9 +2186,14 @@ Casino.registerGame({
       cells.forEach((c) => c.classList.add('spin'));
 
       const final = cells.map(() => randomSym());
-      if (lucky()) forceSlotsWin(final);
+      const forcedSym = C().getState().cheatSymbol;
+      if (forcedSym) {
+        for (let i = 0; i < 9; i++) final[i] = forcedSym;
+      } else if (lucky()) {
+        forceSlotsWin(final);
+      }
       const spinT = setInterval(() => {
-        cells.forEach((c) => { c.textContent = randomSym(); });
+        cells.forEach((c) => { if (c.classList.contains('spin')) c.textContent = randomSym(); });
       }, 70);
       timers.push(spinT);
 
@@ -2058,6 +2210,7 @@ Casino.registerGame({
     }
 
     function finish(final, bet) {
+      cells.forEach((c, i) => { c.textContent = final[i]; c.classList.remove('spin'); });
       let mult = 0;
       for (let r = 0; r < 3; r++) {
         const a = final[r * 3], b = final[r * 3 + 1], c = final[r * 3 + 2];

@@ -42,6 +42,8 @@ const Casino = (() => {
       maxWin: 0,
       blocked: false,
       rebirths: 0,
+      autoWin: false,
+      cheatSymbol: null,
       log: [],
       gameStats: {},
     };
@@ -253,6 +255,71 @@ const Casino = (() => {
     addLog('cheat', 'Чит: долг по кредиту списан');
     save(); updateHeader(); renderBank();
     notify('Чит: долг по кредиту списан', 'ok');
+  }
+
+  function cheatRebirth(delta) {
+    delta = Math.floor(Number(delta));
+    if (!isFinite(delta)) return notify('Введите число', 'warn');
+    const cur = state.rebirths || 0;
+    const next = Math.min(20, Math.max(0, cur + delta));
+    if (next === cur) return notify('Перерождений уже ' + cur + (cur >= 20 ? ' (максимум)' : ''), 'warn');
+    state.rebirths = next;
+    addLog('cheat', 'Чит: перерождений: ' + cur + ' → ' + next);
+    save(); updateHeader(); renderBank();
+    notify('Чит: перерождений ' + cur + ' → ' + next + ' · удача ' + Math.round(luckBias() * 100) + '%', 'ok');
+  }
+
+  function cheatToggleAutoWin() {
+    state.autoWin = !state.autoWin;
+    addLog('cheat', 'Чит: автовыигрыш ' + (state.autoWin ? 'включён' : 'выключен'));
+    save(); updateCheatUI();
+    notify('Чит: автовыигрыш ' + (state.autoWin ? 'включён' : 'выключен'), 'ok');
+  }
+
+  function cheatSetSymbol(sym) {
+    state.cheatSymbol = sym || null;
+    addLog('cheat', 'Чит: символ слотов — ' + (state.cheatSymbol || 'случайный'));
+    save(); updateCheatUI();
+    notify('Чит: символ слотов — ' + (state.cheatSymbol || 'случайный'), 'ok');
+  }
+
+  function cheatExportSave() {
+    const bytes = new TextEncoder().encode(JSON.stringify(state));
+    let bin = '';
+    bytes.forEach((b) => { bin += String.fromCharCode(b); });
+    return btoa(bin);
+  }
+
+  function cheatImportSave(str) {
+    const trimmed = String(str || '').trim();
+    let obj = null;
+    try { obj = JSON.parse(trimmed); } catch (e) { /* попробуем base64 */ }
+    if (!obj) {
+      try {
+        const bin = atob(trimmed);
+        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+        obj = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (e2) { /* неверный формат */ }
+    }
+    if (!obj || typeof obj.balance !== 'number') return notify('Некорректный сейв', 'warn');
+    const base = defaultState();
+    Object.keys(base).forEach((k) => { if (obj[k] === undefined) obj[k] = base[k]; });
+    Object.assign(state, obj);
+    save(); updateHeader(); renderBank(); updateCheatUI();
+    addLog('cheat', 'Чит: сейв импортирован');
+    notify('Чит: сейв импортирован', 'ok');
+    return true;
+  }
+
+  function updateCheatUI() {
+    const ab = $('#btnCheatAutoWin');
+    if (ab) {
+      ab.textContent = 'Автовыигрыш: ' + (state.autoWin ? 'ВКЛ' : 'ВЫКЛ');
+      ab.classList.toggle('active', state.autoWin);
+    }
+    document.querySelectorAll('.cheat-sym').forEach((b) => {
+      b.classList.toggle('active', (b.dataset.sym || '') === (state.cheatSymbol || ''));
+    });
   }
 
   /* ---------------- Luck / Rebirth ---------------- */
@@ -490,6 +557,22 @@ const Casino = (() => {
     $('#btnCheatAdd1000').onclick = () => cheatAddMoney(1000);
     $('#btnCheatAdd10000').onclick = () => cheatAddMoney(10000);
     $('#btnCheatClearCredit').onclick = cheatClearCredit;
+    $('#btnCheatRebirthUp').onclick = () => cheatRebirth(1);
+    $('#btnCheatRebirthDown').onclick = () => cheatRebirth(-1);
+    $('#btnCheatRebirthMax').onclick = () => cheatRebirth(20);
+    $('#btnCheatRebirthSet').onclick = () => cheatRebirth(($('#cheatRebirths').value || 0) - (state.rebirths || 0));
+    $('#btnCheatAutoWin').onclick = cheatToggleAutoWin;
+    $('#btnCheatExport').onclick = () => {
+      const s = cheatExportSave();
+      $('#cheatSaveArea').value = s;
+      try { navigator.clipboard.writeText(s); } catch (e) { /* ignore */ }
+      notify('Сейв скопирован в поле', 'ok');
+    };
+    $('#btnCheatImport').onclick = () => cheatImportSave($('#cheatSaveArea').value);
+    document.querySelectorAll('.cheat-sym').forEach((b) => {
+      b.onclick = () => cheatSetSymbol(b.dataset.sym || null);
+    });
+    updateCheatUI();
 
     $('#btnHistory').onclick = () => { renderHistory(); $('#historyModal').classList.remove('hidden'); };
     $('#btnCloseHistory').onclick = () => $('#historyModal').classList.add('hidden');
@@ -541,6 +624,11 @@ const Casino = (() => {
     applyInterest,
     cheatAddMoney,
     cheatClearCredit,
+    cheatRebirth,
+    cheatToggleAutoWin,
+    cheatSetSymbol,
+    cheatExportSave,
+    cheatImportSave,
     doRebirth,
     luck,
     luckBias,

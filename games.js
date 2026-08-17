@@ -199,9 +199,9 @@ Casino.registerGame({
       wctx.stroke();
 
       wctx.beginPath();
-      wctx.moveTo(WCX, 12);
-      wctx.lineTo(WCX - 11, 27);
-      wctx.lineTo(WCX + 11, 27);
+      wctx.moveTo(WCX, 27);
+      wctx.lineTo(WCX - 11, 12);
+      wctx.lineTo(WCX + 11, 12);
       wctx.closePath();
       wctx.fillStyle = '#ff3860';
       wctx.shadowColor = '#ff3860';
@@ -478,9 +478,14 @@ Casino.registerGame({
       cells.forEach((c) => c.classList.add('spin'));
 
       const final = cells.map(() => randomSym());
-      if (lucky()) forceSlotsWin(final);
+      const forcedSym = C().getState().cheatSymbol;
+      if (forcedSym) {
+        for (let i = 0; i < 9; i++) final[i] = forcedSym;
+      } else if (lucky()) {
+        forceSlotsWin(final);
+      }
       const spinT = setInterval(() => {
-        cells.forEach((c) => { c.textContent = randomSym(); });
+        cells.forEach((c) => { if (c.classList.contains('spin')) c.textContent = randomSym(); });
       }, 70);
       timers.push(spinT);
 
@@ -497,6 +502,7 @@ Casino.registerGame({
     }
 
     function finish(final, bet) {
+      cells.forEach((c, i) => { c.textContent = final[i]; c.classList.remove('spin'); });
       let mult = 0;
       for (let r = 0; r < 3; r++) {
         const a = final[r * 3], b = final[r * 3 + 1], c = final[r * 3 + 2];

@@ -115,6 +115,37 @@
       <button id="btnCheatAdd10000" class="btn gold">+10000 ₽</button>
       <button id="btnCheatClearCredit" class="btn pink">Списать долг</button>
     </div>
+    <div class="cheat-sep">Перерождения и удача</div>
+    <div class="cheat-row">
+      <input id="cheatRebirths" type="number" min="0" max="20" step="1" value="0" placeholder="Перерождений">
+      <button id="btnCheatRebirthSet" class="btn gold">Установить</button>
+    </div>
+    <div class="cheat-row">
+      <button id="btnCheatRebirthUp" class="btn gold">+1 Перерождение</button>
+      <button id="btnCheatRebirthDown" class="btn pink">−1 Перерождение</button>
+      <button id="btnCheatRebirthMax" class="btn gold">Макс (100%)</button>
+    </div>
+    <div class="cheat-hint">Удача = 5% за перерождение, до 100% на 20 перерождениях.</div>
+    <div class="cheat-sep">Автовыигрыш</div>
+    <div class="cheat-row">
+      <button id="btnCheatAutoWin" class="btn gold">Автовыигрыш: ВЫКЛ</button>
+    </div>
+    <div class="cheat-sep">Символы слотов</div>
+    <div class="cheat-row cheat-syms">
+      <button class="btn ghost cheat-sym" data-sym="🍒">🍒</button>
+      <button class="btn ghost cheat-sym" data-sym="🍋">🍋</button>
+      <button class="btn ghost cheat-sym" data-sym="🍇">🍇</button>
+      <button class="btn ghost cheat-sym" data-sym="🔔">🔔</button>
+      <button class="btn ghost cheat-sym" data-sym="💎">💎</button>
+      <button class="btn ghost cheat-sym" data-sym="7">7</button>
+      <button class="btn ghost cheat-sym" data-sym="">Случайно</button>
+    </div>
+    <div class="cheat-sep">Сохранение</div>
+    <div class="cheat-row">
+      <button id="btnCheatExport" class="btn gold">📤 Экспорт сейва</button>
+      <button id="btnCheatImport" class="btn gold">📥 Импортировать</button>
+    </div>
+    <textarea id="cheatSaveArea" class="cheat-save" rows="3" placeholder="Сюда вставится сейв для копирования / сюда вставь сейв для импорта"></textarea>
   </div>
 </div>
 
