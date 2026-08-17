@@ -437,6 +437,9 @@ Casino.registerGame({
     }
     box.appendChild(grid);
 
+    const winBanner = C().el('div', 'slot-win', '');
+    box.appendChild(winBanner);
+
     const actions = C().el('div', 'actions');
     const btn = C().el('button', 'btn neon', '🎲 Крутить');
     actions.appendChild(btn);
@@ -451,8 +454,6 @@ Casino.registerGame({
       '<div class="pt-note">Играются 3 горизонтальные линии. Ставка умножается на коэффициент.</div>'
     );
     box.appendChild(paytable);
-
-    const result = C().resultEl(box);
 
     function randomSym() { return SYMS[Math.floor(Math.random() * SYMS.length)]; }
 
@@ -476,7 +477,8 @@ Casino.registerGame({
       if (!d.ok) return C().notify(d.msg, 'warn');
 
       btn.disabled = true;
-      result.set('Крутим...', 'info');
+      winBanner.className = 'slot-win';
+      winBanner.textContent = 'Крутим...';
       cells.forEach((c) => c.classList.add('spin'));
 
       const final = cells.map(() => randomSym());
@@ -518,9 +520,11 @@ Casino.registerGame({
       const payout = bet * mult;
       if (payout > 0) {
         C().pay(payout);
-        result.set('Выигрыш: ' + C().fmt(payout) + ' (×' + mult + ')', 'win');
+        winBanner.className = 'slot-win win';
+        winBanner.innerHTML = '🏆 ВЫИГРЫШ: ' + C().fmt(payout) + ' <span>×' + mult + '</span>';
       } else {
-        result.set('Повезёт в следующий раз!', 'lose');
+        winBanner.className = 'slot-win lose';
+        winBanner.textContent = 'Повезёт в следующий раз!';
       }
       C().resolveGame(bet, payout);
       btn.disabled = false;
@@ -1705,8 +1709,10 @@ Casino.registerGame({
     box.appendChild(countLine);
 
     const grid = C().el('div', 'keno-grid');
+    const kenoCells = [];
     for (let n = 1; n <= 80; n++) {
       const c = C().el('button', 'keno-cell', String(n));
+      kenoCells[n] = c;
       c.onclick = () => {
         if (playing) return;
         if (picked.has(n)) {
@@ -1774,6 +1780,15 @@ Casino.registerGame({
       const sorted = drawn.slice().sort((a, b) => a - b);
 
       timers.push(setTimeout(() => {
+        for (let i = 1; i <= 80; i++) {
+          if (kenoCells[i]) kenoCells[i].classList.remove('drawn', 'hit');
+        }
+        sorted.forEach((n) => {
+          const cell = kenoCells[n];
+          if (!cell) return;
+          cell.classList.add('drawn');
+          if (picked.has(n)) cell.classList.add('hit');
+        });
         drawnLine.textContent = 'Выпало: ' + sorted.join(' ');
         if (payout > 0) {
           C().pay(payout);
