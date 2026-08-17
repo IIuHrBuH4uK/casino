@@ -241,9 +241,24 @@ Casino.registerGame({
         chipBar.querySelectorAll('.chip-btn').forEach((x, i) => {
           if (i < chipValues.length) x.classList.toggle('active', chipValues[i] === v);
         });
+        const ab = chipBar.querySelector('.chip-all');
+        if (ab) ab.classList.remove('active');
       };
       chipBar.appendChild(b);
     });
+    const btnAll = C().el('button', 'chip-btn chip-all', 'ВСЁ');
+    btnAll.title = 'Поставить все деньги';
+    btnAll.onclick = () => {
+      removeMode = false;
+      btnRemove.classList.remove('active');
+      chipBar.querySelectorAll('.chip-btn').forEach((x) => x.classList.remove('dim'));
+      chipBar.querySelectorAll('.chip-btn').forEach((x, i) => {
+        if (i < chipValues.length) x.classList.toggle('active', false);
+      });
+      btnAll.classList.add('active');
+      chip = Math.max(1, Math.floor(C().getState().balance));
+    };
+    chipBar.appendChild(btnAll);
     const btnRemove = C().el('button', 'chip-btn chip-remove', '−');
     btnRemove.title = 'Снять ставки: тап по полю убирает фишку';
     btnRemove.onclick = () => {

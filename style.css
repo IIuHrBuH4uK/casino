@@ -265,7 +265,7 @@ main { flex: 1; padding: 24px 18px 40px; max-width: 1100px; width: 100%; margin:
   outline: none;
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
 }
-.betbar .btn-half, .betbar .btn-x2 { padding: 8px 12px; }
+.betbar .btn-half, .betbar .btn-x2, .betbar .btn-all { padding: 8px 12px; }
 
 .result-line {
   margin-top: 14px;

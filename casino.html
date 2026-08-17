@@ -281,7 +281,7 @@ main { flex: 1; padding: 24px 18px 40px; max-width: 1100px; width: 100%; margin:
   outline: none;
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
 }
-.betbar .btn-half, .betbar .btn-x2 { padding: 8px 12px; }
+.betbar .btn-half, .betbar .btn-x2, .betbar .btn-all { padding: 8px 12px; }
 
 .result-line {
   margin-top: 14px;
@@ -1006,7 +1006,7 @@ const Casino = (() => {
   const DEPOSIT_RATE = 0.06;
   const INTEREST_EVERY = 5;
   const REBIRTH_COST = 1000000;
-  const MAX_LUCK_BIAS = 0.6;
+  const MAX_LUCK_BIAS = 1;
   const memStorage = {};
 
   const state = load();
@@ -1362,10 +1362,12 @@ const Casino = (() => {
       <input type="number" class="bet-input" value="${o.defaultBet || 10}" min="1" step="1">
       <button class="btn ghost btn-half">½</button>
       <button class="btn ghost btn-x2">×2</button>
+      <button class="btn ghost btn-all">ВСЁ</button>
     `);
     const input = bar.querySelector('.bet-input');
     bar.querySelector('.btn-half').onclick = () => { input.value = Math.max(1, Math.floor(input.value / 2)); };
     bar.querySelector('.btn-x2').onclick = () => { input.value = Math.max(1, Math.floor(input.value * 2)); };
+    bar.querySelector('.btn-all').onclick = () => { input.value = Math.max(MIN_BET, Math.floor(state.balance)); };
     const getBet = () => {
       const v = Math.floor(Number(input.value));
       return (isFinite(v) && v >= MIN_BET) ? v : MIN_BET;
@@ -1800,9 +1802,24 @@ Casino.registerGame({
         chipBar.querySelectorAll('.chip-btn').forEach((x, i) => {
           if (i < chipValues.length) x.classList.toggle('active', chipValues[i] === v);
         });
+        const ab = chipBar.querySelector('.chip-all');
+        if (ab) ab.classList.remove('active');
       };
       chipBar.appendChild(b);
     });
+    const btnAll = C().el('button', 'chip-btn chip-all', 'ВСЁ');
+    btnAll.title = 'Поставить все деньги';
+    btnAll.onclick = () => {
+      removeMode = false;
+      btnRemove.classList.remove('active');
+      chipBar.querySelectorAll('.chip-btn').forEach((x) => x.classList.remove('dim'));
+      chipBar.querySelectorAll('.chip-btn').forEach((x, i) => {
+        if (i < chipValues.length) x.classList.toggle('active', false);
+      });
+      btnAll.classList.add('active');
+      chip = Math.max(1, Math.floor(C().getState().balance));
+    };
+    chipBar.appendChild(btnAll);
     const btnRemove = C().el('button', 'chip-btn chip-remove', '−');
     btnRemove.title = 'Снять ставки: тап по полю убирает фишку';
     btnRemove.onclick = () => {

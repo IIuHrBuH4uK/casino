@@ -8,7 +8,7 @@ const Casino = (() => {
   const DEPOSIT_RATE = 0.06;
   const INTEREST_EVERY = 5;
   const REBIRTH_COST = 1000000;
-  const MAX_LUCK_BIAS = 0.6;
+  const MAX_LUCK_BIAS = 1;
   const memStorage = {};
 
   const state = load();
@@ -364,10 +364,12 @@ const Casino = (() => {
       <input type="number" class="bet-input" value="${o.defaultBet || 10}" min="1" step="1">
       <button class="btn ghost btn-half">½</button>
       <button class="btn ghost btn-x2">×2</button>
+      <button class="btn ghost btn-all">ВСЁ</button>
     `);
     const input = bar.querySelector('.bet-input');
     bar.querySelector('.btn-half').onclick = () => { input.value = Math.max(1, Math.floor(input.value / 2)); };
     bar.querySelector('.btn-x2').onclick = () => { input.value = Math.max(1, Math.floor(input.value * 2)); };
+    bar.querySelector('.btn-all').onclick = () => { input.value = Math.max(MIN_BET, Math.floor(state.balance)); };
     const getBet = () => {
       const v = Math.floor(Number(input.value));
       return (isFinite(v) && v >= MIN_BET) ? v : MIN_BET;
