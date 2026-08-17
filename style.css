@@ -875,3 +875,79 @@ main { flex: 1; padding: 24px 18px 40px; max-width: 1100px; width: 100%; margin:
   .crash-stats { flex-wrap: wrap; justify-content: center; }
   .poker-table .hand-row { flex-wrap: wrap; }
 }
+
+/* ---------- Game rules ---------- */
+.game-rules {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.game-rules summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold);
+  user-select: none;
+}
+.game-rules summary::-webkit-details-marker { display: none; }
+.game-rules summary::before { content: '▸ '; }
+.game-rules[open] summary::before { content: '▾ '; }
+.game-rules .rules-body {
+  padding: 0 14px 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dim);
+}
+
+/* ---------- Keno ---------- */
+.keno-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+.keno-cell {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 2px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  cursor: pointer;
+}
+.keno-cell.active {
+  background: var(--gold);
+  color: #120a1f;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.7);
+}
+
+/* ---------- Baccarat ---------- */
+.baccarat-bets { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+
+/* ---------- Craps ---------- */
+.craps-picks { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+.craps-dice { display: flex; gap: 16px; justify-content: center; margin: 16px 0; }
+.craps-dice .dice {
+  width: 74px;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--green);
+  background: radial-gradient(circle at 30% 30%, #fff, #d9d9d9);
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.45), inset 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 480px) {
+  .keno-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .keno-cell { font-size: 12px; padding: 7px 2px; }
+}

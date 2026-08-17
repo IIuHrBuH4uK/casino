@@ -162,6 +162,11 @@ const Casino = (() => {
     $('#gameTitle').textContent = g.icon + ' ' + g.name;
     const box = $('#gameBox');
     box.innerHTML = '';
+    if (g.rules) {
+      const details = el('details', 'game-rules');
+      details.innerHTML = '<summary>📖 Как играть</summary><div class="rules-body">' + g.rules + '</div>';
+      box.appendChild(details);
+    }
     updateHeader();
     activeModule = g.mount(box);
   }

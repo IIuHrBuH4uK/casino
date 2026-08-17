@@ -100,6 +100,7 @@ Casino.registerGame({
   icon: '🎡',
   color: '#ff2d95',
   desc: 'Европейская рулетка: числа, цвета, чётность и дюжины. До 36:1.',
+  rules: 'Ставьте на числа, цвета, чётность или дюжины. Колесо выбирает число 0–36. Выплаты: точное число ×36, цвет/чёт/половина ×2, дюжина ×3. Удача выводит одно из чисел, на которое вы поставили.',
   mount(box) {
     const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
     const numColor = (n) => n === 0 ? 'green' : (REDS.has(n) ? 'red' : 'black');
@@ -419,6 +420,7 @@ Casino.registerGame({
   icon: '🎰',
   color: '#a855f7',
   desc: 'Классический автомат 3×3: три линии, символы до ×50.',
+  rules: 'Барабан 3×3, считаются 3 горизонтальные линии. Три одинаковых символа — выплата по таблице: вишня ×2, лимон ×3, виноград ×5, колокол ×10, алмаз ×25, семёрка ×50; две вишни в линии — ×1. Чит «Символы слотов» заполняет все ячейки выбранным символом.',
   mount(box) {
     const SYMS = ['🍒', '🍋', '🍇', '🔔', '💎', '7'];
     const PAY = { '🍒': 2, '🍋': 3, '🍇': 5, '🔔': 10, '💎': 25, '7': 50 };
@@ -542,6 +544,7 @@ Casino.registerGame({
   icon: '🃏',
   color: '#ffd700',
   desc: 'Техасский холдем против бота. Кто собрал сильнейшую комбинацию — забирает банк.',
+  rules: 'По 2 карты вам и боту + 5 общих на столе. Сильнейшая комбинация забирает банк. Ранг: стрит-флеш → каре → фулл-хаус → флеш → стрит → тройка → две пары → пара → старшая карта. Удача даёт пару.',
   mount(box) {
     const { bar, getBet } = C().betControls(box, { defaultBet: 20 });
 
@@ -709,6 +712,7 @@ Casino.registerGame({
   icon: '♠️',
   color: '#00e5ff',
   desc: 'Сыграйте до 21 против дилера. Блэкджек платит 3:2, есть удвоение.',
+  rules: 'Наберите больше дилера, но не больше 21. Туз = 1 или 11, картинки = 10. Блэкджек (туз + картинка) платит 3:2. «Удвоить» — одна карта на удвоенную ставку.',
   mount(box) {
     const { bar, getBet } = C().betControls(box, { defaultBet: 20 });
 
@@ -929,6 +933,7 @@ Casino.registerGame({
   icon: '🎲',
   color: '#39ff14',
   desc: 'Два кубика: малый/большой, семёрка, дубль или точная сумма.',
+  rules: 'Выберите условие: больше/меньше 7, семёрка, дубль или точная сумма двух костей (2–12). Выпали кости — проверили условие, выплата по коэффициенту. Удача подгоняет выигрышное условие.',
   mount(box) {
     const EXACT = [0, 0, 36, 18, 12, 9, 7, 6, 7, 9, 12, 18, 36];
 
@@ -1105,6 +1110,7 @@ Casino.registerGame({
   icon: '🚀',
   color: '#ffd700',
   desc: 'Множитель растёт до взрыва. Заберите выигрыш вовремя!',
+  rules: 'Коэффициент растёт, пока самолёт не взорвётся. Нажмите «Забрать» до взрыва — получите ставку × множитель. Не успели — потеряли ставку. Удача увеличивает множитель.',
   mount(box) {
     const { bar, input, getBet } = C().betControls(box, { defaultBet: 20 });
 
@@ -1204,6 +1210,7 @@ Casino.registerGame({
   icon: '🔮',
   color: '#00e5ff',
   desc: 'Шарик летит сквозь штыри. Выберите риск и ловите множитель!',
+  rules: 'Шарик падает сквозь штыри в слот с множителем. Риск «Низкий» — небольшие, но частые выигрыши, «Высокий» — множители до ×15. Удача направляет шарик в выгодный слот.',
   mount(box) {
     const ROWS = 12;
     const COLS = ROWS + 1;
@@ -1253,7 +1260,6 @@ Casino.registerGame({
     const result = C().resultEl(wrap);
 
     let ball = null;
-    let raf = null;
     let dropping = false;
     const timers = [];
 
@@ -1350,32 +1356,28 @@ Casino.registerGame({
         dirs.push(...path);
       }
 
-      ball = { x: W / 2, y: pegTop - 40, row: 0, prevX: W / 2 };
-      let last = performance.now();
+      ball = { x: W / 2, y: pegTop - 40, row: 0 };
       const speed = 8;
-
-      const step = (now) => {
-        const dt = (now - last) / 1000;
-        last = now;
+      let last = Date.now();
+      const tick = setInterval(() => {
+        const dt = Math.min(0.05, (Date.now() - last) / 1000);
+        last = Date.now();
         ball.y += speed * dt * 60;
         const r = ball.row;
         if (ball.y >= pegTop + r * rowGap && r < ROWS) {
-          const targetX = slotX(dirs[r]);
-          ball.x = targetX;
+          ball.x = slotX(dirs[r]);
           ball.row = r + 1;
-          if (ball.row <= ROWS) ball.prevX = targetX;
         }
         draw();
-        if (ball.y < H - 34 - ballR && ball.row <= ROWS) {
-          raf = requestAnimationFrame(step);
-        } else {
-          raf = null;
+        if (ball.y >= H - 34 - ballR) {
+          clearInterval(tick);
           ball.x = slotX(finalIdx);
+          ball.y = H - 34 - ballR;
           draw();
           finish(bet, finalIdx);
         }
-      };
-      raf = requestAnimationFrame(step);
+      }, 16);
+      timers.push(tick);
     }
 
     function finish(bet, idx) {
@@ -1398,7 +1400,7 @@ Casino.registerGame({
     draw();
 
     return {
-      destroy() { if (raf) cancelAnimationFrame(raf); timers.forEach(clearTimeout); ap.stop(); },
+      destroy() { timers.forEach((t) => { clearTimeout(t); clearInterval(t); }); ap.stop(); },
     };
   },
 });
@@ -1413,6 +1415,7 @@ Casino.registerGame({
   icon: '🎯',
   color: '#ffd700',
   desc: 'Крутите колесо: сектора с множителями до ×10.',
+  rules: 'Крутите колесо — стрелка укажет сектор с множителем от ×0.5 до ×10. Удача подкручивает колесо к выгодному сектору.',
   mount(box) {
     const SEGS = [1, 2, 5, 1, 0.5, 3, 1, 10, 0.5, 2, 1, 0.5];
     const N = SEGS.length;
@@ -1562,6 +1565,7 @@ Casino.registerGame({
   icon: '↕️',
   color: '#39ff14',
   desc: 'Угадайте, будет ли следующая карта выше или ниже текущей. Равные карты — проигрыш.',
+  rules: 'Открыта карта — решите: следующая будет выше или ниже. Множитель зависит от ранга текущей карты: на «7» самые большие коэффициенты, на тузе — минимальные. Равные карты — проигрыш. Удача подбирает подходящую карту.',
   mount(box) {
     const HPAY = { 2: 2, 3: 2, 4: 2, 5: 2, 6: 3, 7: 3, 8: 4, 9: 4, 10: 5, 11: 6, 12: 8, 13: 12, 14: 0 };
     const LPAY = { 2: 0, 3: 12, 4: 8, 5: 6, 6: 5, 7: 4, 8: 4, 9: 3, 10: 3, 11: 2, 12: 2, 13: 2, 14: 2 };
@@ -1662,6 +1666,337 @@ Casino.registerGame({
 
     return {
       destroy() { timers.forEach(clearTimeout); },
+    };
+  },
+});
+
+/* ============================================================
+   9. КЕНО (лотерея)
+   ============================================================ */
+
+Casino.registerGame({
+  id: 'keno',
+  name: 'Кено',
+  icon: '🎱',
+  color: '#facc15',
+  desc: 'Выберите до 10 чисел из 80. Выпадают 20 — совпадения умножают ставку!',
+  rules: 'Выберите до 10 чисел из 80 — выпадет 20 случайных. Больше совпадений = больше множитель: 3 из 3 ×30, 4 из 4 ×100, 5 из 5 ×250, ..., 10 из 10 ×10000. Удача подгоняет количество совпадений.',
+  mount(box) {
+    const KENO_PAY = {
+      1: [0, 3],
+      2: [0, 0, 12],
+      3: [0, 0, 1, 30],
+      4: [0, 0, 1, 3, 100],
+      5: [0, 0, 0, 1, 5, 250],
+      6: [0, 0, 0, 1, 3, 10, 500],
+      7: [0, 0, 0, 0, 2, 6, 25, 1000],
+      8: [0, 0, 0, 0, 1, 5, 15, 100, 2500],
+      9: [0, 0, 0, 0, 1, 3, 10, 30, 250, 5000],
+      10: [0, 0, 0, 0, 1, 2, 5, 20, 100, 1000, 10000],
+    };
+    const MAX_PICK = 10;
+    const picked = new Set();
+    let playing = false;
+    const timers = [];
+
+    const { bar, getBet } = C().betControls(box, { defaultBet: 10 });
+
+    const countLine = C().el('div', 'result-line info', 'Выбрано: 0 / ' + MAX_PICK);
+    box.appendChild(countLine);
+
+    const grid = C().el('div', 'keno-grid');
+    for (let n = 1; n <= 80; n++) {
+      const c = C().el('button', 'keno-cell', String(n));
+      c.onclick = () => {
+        if (playing) return;
+        if (picked.has(n)) {
+          picked.delete(n);
+          c.classList.remove('active');
+        } else if (picked.size < MAX_PICK) {
+          picked.add(n);
+          c.classList.add('active');
+        } else {
+          C().notify('Максимум ' + MAX_PICK + ' чисел', 'warn');
+        }
+        countLine.textContent = 'Выбрано: ' + picked.size + ' / ' + MAX_PICK;
+      };
+      grid.appendChild(c);
+    }
+    box.appendChild(grid);
+
+    const drawnLine = C().el('div', 'result-line info', '');
+    box.appendChild(drawnLine);
+
+    const actions = C().el('div', 'actions');
+    const btnDraw = C().el('button', 'btn neon', '🎱 Кинуть');
+    const btnClear = C().el('button', 'btn ghost', 'Очистить');
+    actions.appendChild(btnDraw);
+    actions.appendChild(btnClear);
+    box.appendChild(actions);
+    const ap = C().autoplay({ container: actions, getBtn: () => btnDraw });
+
+    const result = C().resultEl(box);
+
+    function draw() {
+      if (playing) return;
+      if (!picked.size) return C().notify('Выберите хотя бы одно число', 'warn');
+      const bet = getBet();
+      const d = C().deductBet(bet);
+      if (!d.ok) return C().notify(d.msg, 'warn');
+      playing = true;
+      btnDraw.disabled = true;
+      result.set('Тянем 20 чисел...', 'info');
+
+      let drawn = Array.from({ length: 20 }, () => 1 + Math.floor(Math.random() * 80));
+      let drawnSet = new Set(drawn);
+      let matches = 0;
+      picked.forEach((n) => { if (drawnSet.has(n)) matches++; });
+
+      if (lucky()) {
+        const good = KENO_PAY[picked.size].map((m, i) => ({ i, m })).filter((x) => x.m > 1);
+        if (good.length) {
+          const target = weightedPick(good, (x) => x.m).i;
+          const needAdd = [...picked].filter((n) => !drawnSet.has(n));
+          const removable = drawn.filter((n) => !picked.has(n));
+          let m = matches;
+          while (m < target && needAdd.length && removable.length) {
+            const add = needAdd.pop();
+            const del = removable.pop();
+            drawn[drawn.indexOf(del)] = add;
+            m++;
+          }
+          matches = m;
+        }
+      }
+
+      const mult = (KENO_PAY[picked.size] && KENO_PAY[picked.size][matches]) || 0;
+      const payout = Math.round(bet * mult);
+      const sorted = drawn.slice().sort((a, b) => a - b);
+
+      timers.push(setTimeout(() => {
+        drawnLine.textContent = 'Выпало: ' + sorted.join(' ');
+        if (payout > 0) {
+          C().pay(payout);
+          result.set('Совпадений: ' + matches + ' из ' + picked.size + ' · Выигрыш: ' + C().fmt(payout) + ' (×' + mult + ')', 'win');
+        } else {
+          result.set('Совпадений: ' + matches + ' из ' + picked.size + ' · Проигрыш', 'lose');
+        }
+        C().resolveGame(bet, payout);
+        playing = false;
+        btnDraw.disabled = false;
+      }, 500));
+    }
+
+    btnDraw.onclick = draw;
+    btnClear.onclick = () => {
+      if (playing) return;
+      picked.clear();
+      grid.querySelectorAll('.keno-cell').forEach((c) => c.classList.remove('active'));
+      countLine.textContent = 'Выбрано: 0 / ' + MAX_PICK;
+    };
+
+    return {
+      destroy() { timers.forEach(clearTimeout); ap.stop(); },
+    };
+  },
+});
+
+/* ============================================================
+   10. БАККАРА
+   ============================================================ */
+
+Casino.registerGame({
+  id: 'baccarat',
+  name: 'Баккара',
+  icon: '🃏',
+  color: '#f43f5e',
+  desc: 'Игрок против Банкира. Кто ближе к 9 — забирает банк. Ничья платит ×8!',
+  rules: 'Игрок и Банкир получают по 2 карты. Очки = сумма по модулю 10: туз = 1, картинки и десятки = 0, остальные — номинал. Кто ближе к 9 — побеждает. Ставки: Игрок ×1, Банкир ×0.95, Ничья ×8. Удача подгоняет исход под вашу ставку.',
+  mount(box) {
+    const BETS = [
+      { k: 'player', label: 'Игрок', mult: 1 },
+      { k: 'banker', label: 'Банкир', mult: 0.95 },
+      { k: 'tie', label: 'Ничья', mult: 8 },
+    ];
+    let betOn = 'player';
+    let playing = false;
+    const timers = [];
+
+    const { bar, getBet } = C().betControls(box, { defaultBet: 20 });
+
+    const sel = C().el('div', 'baccarat-bets');
+    BETS.forEach((b) => {
+      const btn = C().el('button', 'btn risk-btn' + (b.k === betOn ? ' active' : ''), b.label + ' ×' + b.mult);
+      btn.onclick = () => {
+        if (playing) return;
+        betOn = b.k;
+        sel.querySelectorAll('.risk-btn').forEach((x) => x.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      sel.appendChild(btn);
+    });
+    box.appendChild(sel);
+
+    const table = C().el('div', 'bj-table');
+    table.innerHTML =
+      '<div class="bj-row"><div class="bj-label">Игрок</div><div class="card-row" id="baccPCards"></div><div class="bj-total" id="baccPTot">—</div></div>' +
+      '<div class="bj-row"><div class="bj-label">Банкир</div><div class="card-row" id="baccBCards"></div><div class="bj-total" id="baccBTot">—</div></div>';
+    box.appendChild(table);
+
+    const actions = C().el('div', 'actions');
+    const btnDeal = C().el('button', 'btn neon', '🃏 Раздать');
+    actions.appendChild(btnDeal);
+    box.appendChild(actions);
+    const ap = C().autoplay({ container: actions, getBtn: () => btnDeal });
+
+    const result = C().resultEl(box);
+
+    function cardValue(c) { return c.r === 14 ? 1 : c.r >= 10 ? 0 : c.r; }
+    function dealHand() { return [pickRand(), pickRand()]; }
+    function pickRand() { return { r: 2 + Math.floor(Math.random() * 13), s: Math.floor(Math.random() * 4) }; }
+    function handTotal(cards) { return cards.reduce((s, c) => s + cardValue(c), 0) % 10; }
+
+    function deal() {
+      if (playing) return;
+      const bet = getBet();
+      const d = C().deductBet(bet);
+      if (!d.ok) return C().notify(d.msg, 'warn');
+      playing = true;
+      btnDeal.disabled = true;
+      result.set('Раздаём...', 'info');
+
+      let pc = dealHand(), bc = dealHand();
+      let pt = handTotal(pc), bt = handTotal(bc);
+      if (lucky()) {
+        let guard = 0;
+        while (guard++ < 300) {
+          if (betOn === 'tie' && pt === bt) break;
+          if (betOn === 'player' && pt > bt) break;
+          if (betOn === 'banker' && bt > pt) break;
+          pc = dealHand(); bc = dealHand();
+          pt = handTotal(pc); bt = handTotal(bc);
+        }
+      }
+
+      timers.push(setTimeout(() => {
+        C().$('#baccPCards').innerHTML = pc.map((c) => cardHTML(c)).join('');
+        C().$('#baccBCards').innerHTML = bc.map((c) => cardHTML(c)).join('');
+        C().$('#baccPTot').textContent = 'Очки: ' + pt;
+        C().$('#baccBTot').textContent = 'Очки: ' + bt;
+
+        let outcome;
+        if (pt > bt) outcome = 'player';
+        else if (bt > pt) outcome = 'banker';
+        else outcome = 'tie';
+
+        const label = BETS.find((x) => x.k === outcome).label;
+        const b = BETS.find((x) => x.k === betOn);
+        const win = betOn === outcome;
+        const payout = win ? Math.round(bet * b.mult) : 0;
+        if (payout > 0) {
+          C().pay(payout);
+          result.set('Победа: ' + label + ' · Выигрыш: ' + C().fmt(payout), 'win');
+        } else {
+          result.set('Победа: ' + label + ' · Проигрыш', 'lose');
+        }
+        C().resolveGame(bet, payout);
+        playing = false;
+        btnDeal.disabled = false;
+      }, 500));
+    }
+
+    btnDeal.onclick = deal;
+
+    return {
+      destroy() { timers.forEach(clearTimeout); ap.stop(); },
+    };
+  },
+});
+
+/* ============================================================
+   11. КРЭПС (кости)
+   ============================================================ */
+
+Casino.registerGame({
+  id: 'craps',
+  name: 'Крэпс',
+  icon: '🎲',
+  color: '#34d399',
+  desc: 'Выберите сумму костей 2–12. Угадали — множитель по вероятности!',
+  rules: 'Выберите сумму двух костей (2–12) и бросьте их. Угадали — множитель по вероятности: 7 ×5, 6/8 ×6, 5/9 ×8, 4/10 ×11, 3/11 ×17, 2/12 ×30. Удача бросает нужную сумму.',
+  mount(box) {
+    const PAY = { 2: 30, 3: 17, 4: 11, 5: 8, 6: 6, 7: 5, 8: 6, 9: 8, 10: 11, 11: 17, 12: 30 };
+    let target = 7;
+    let playing = false;
+    const timers = [];
+
+    const { bar, getBet } = C().betControls(box, { defaultBet: 10 });
+
+    const pickRow = C().el('div', 'craps-picks');
+    for (let n = 2; n <= 12; n++) {
+      const b = C().el('button', 'btn risk-btn' + (n === target ? ' active' : ''), n + ' ×' + PAY[n]);
+      b.onclick = () => {
+        if (playing) return;
+        target = n;
+        pickRow.querySelectorAll('.risk-btn').forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+      };
+      pickRow.appendChild(b);
+    }
+    box.appendChild(pickRow);
+
+    const diceBox = C().el('div', 'craps-dice', '<div class="dice">6</div><div class="dice">6</div>');
+    box.appendChild(diceBox);
+
+    const actions = C().el('div', 'actions');
+    const btnRoll = C().el('button', 'btn neon', '🎲 Кинуть кости');
+    actions.appendChild(btnRoll);
+    box.appendChild(actions);
+    const ap = C().autoplay({ container: actions, getBtn: () => btnRoll });
+
+    const result = C().resultEl(box);
+
+    function roll() {
+      if (playing) return;
+      const bet = getBet();
+      const d = C().deductBet(bet);
+      if (!d.ok) return C().notify(d.msg, 'warn');
+      playing = true;
+      btnRoll.disabled = true;
+      result.set('Кидаем...', 'info');
+
+      let a = 1 + Math.floor(Math.random() * 6);
+      let b = 1 + Math.floor(Math.random() * 6);
+      if (lucky()) {
+        let guard = 0;
+        while (a + b !== target && guard++ < 300) {
+          a = 1 + Math.floor(Math.random() * 6);
+          b = 1 + Math.floor(Math.random() * 6);
+        }
+      }
+      const sum = a + b;
+      const win = sum === target;
+      const mult = PAY[sum] || 0;
+      const payout = win ? Math.round(bet * mult) : 0;
+
+      timers.push(setTimeout(() => {
+        diceBox.innerHTML = '<div class="dice">' + a + '</div><div class="dice">' + b + '</div>';
+        if (payout > 0) {
+          C().pay(payout);
+          result.set('Сумма: ' + sum + ' · Выигрыш: ' + C().fmt(payout) + ' (×' + mult + ')', 'win');
+        } else {
+          result.set('Сумма: ' + sum + ' · Проигрыш (нужно ' + target + ')', 'lose');
+        }
+        C().resolveGame(bet, payout);
+        playing = false;
+        btnRoll.disabled = false;
+      }, 400));
+    }
+
+    btnRoll.onclick = roll;
+
+    return {
+      destroy() { timers.forEach(clearTimeout); ap.stop(); },
     };
   },
 });
