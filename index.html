@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>NEON CASINO</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEON CASINO">
+<meta name="theme-color" content="#0b0116">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231b1030' stroke='%23ffd700' stroke-width='4'/%3E%3Ctext x='32' y='42' font-size='28' text-anchor='middle' fill='%23ffd700'%3E%E2%82%BD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">NEON<span>CASINO</span></div>
+  <div class="chips">
+    <div class="chip chip-balance">💰 Баланс: <b id="hBalance">100 ₽</b></div>
+    <div class="chip chip-credit">💳 Кредит: <b id="hCredit">0 ₽</b></div>
+    <div class="chip chip-deposit">🏦 Депозит: <b id="hDeposit">0 ₽</b></div>
+    <div class="chip chip-games">🎮 Игр: <b id="hGames">0</b> · <small id="hProgress">0/5</small></div>
+    <div class="chip chip-rebirth">🌟 Перерождений: <b id="hRebirths">0</b></div>
+  </div>
+  <div class="top-actions">
+    <button class="btn ghost" id="btnHistory" title="История операций">📜</button>
+    <button class="btn ghost" id="btnStats" title="Статистика по играм">📊</button>
+    <button class="btn gold" id="btnCheats">🎮 Читы</button>
+    <button class="btn neon" id="btnBank">🏦 Банк</button>
+    <button class="btn ghost hidden" id="btnHome">← На главную</button>
+  </div>
+</header>
+
+<main>
+  <section id="viewMenu">
+    <div class="menu-hero">
+      <h2>Добро пожаловать в <span>NEON&nbsp;CASINO</span></h2>
+      <p>Выберите игру. Проценты по кредиту <b class="txt-pink">+23%</b> и депозиту <b class="txt-cyan">+6%</b> начисляются каждые <b>5</b> сыгранных игр.</p>
+    </div>
+    <div id="gameGrid" class="game-grid"></div>
+    <div id="stats" class="stats"></div>
+  </section>
+
+  <section id="viewGame" class="hidden">
+    <div id="blockBanner" class="block-banner hidden">⚠️ Игра заблокирована: остался долг по кредиту. Погасите кредит, чтобы продолжить.</div>
+    <h2 id="gameTitle" class="game-title"></h2>
+    <div id="gameBox" class="game-box"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Neon Casino · 2026 · Демо-игра на виртуальные рубли</span>
+  <button class="btn ghost small" id="btnReset">Сбросить прогресс</button>
+</footer>
+
+<div id="bankModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>🏦 Банк</h3>
+      <button id="btnCloseBank" class="btn ghost">✕</button>
+    </div>
+    <div class="bank-grid">
+      <div class="bank-panel panel-credit">
+        <h4>💳 Кредит <span class="rate">+23% / 5 игр</span></h4>
+        <div class="bank-info">Текущий долг: <b id="bankCredit">0 ₽</b></div>
+        <div class="bank-row">
+          <input id="creditAmount" type="number" min="1" step="1" placeholder="Сумма кредита">
+          <button id="btnTakeCredit" class="btn neon">Взять кредит</button>
+        </div>
+        <div class="bank-row">
+          <input id="repayAmount" type="number" min="1" step="1" placeholder="Сумма погашения">
+          <button id="btnRepayPartial" class="btn pink">Погасить частично</button>
+        </div>
+        <button id="btnRepayFull" class="btn pink block">Погасить весь кредит</button>
+      </div>
+      <div class="bank-panel panel-deposit">
+        <h4>🏦 Депозит <span class="rate">+6% / 5 игр</span></h4>
+        <div class="bank-info">На депозите: <b id="bankDeposit">0 ₽</b></div>
+        <div class="bank-row">
+          <input id="depositInAmount" type="number" min="1" step="1" placeholder="Сумма внесения">
+          <button id="btnDepositIn" class="btn neon">Внести</button>
+        </div>
+        <div class="bank-row">
+          <input id="depositOutAmount" type="number" min="1" step="1" placeholder="Сумма снятия">
+          <button id="btnDepositOut" class="btn pink">Снять</button>
+        </div>
+      </div>
+    </div>
+    <div class="bank-note">⚠️ При погашении кредита с недостатком средств списывается весь счёт, остаток долга сохраняется, а игра блокируется до полного погашения.</div>
+    <div class="rebirth-panel">
+      <h4>🌟 Перерождение <span class="rate">за 1 000 000 ₽</span></h4>
+      <div class="bank-info">Текущий уровень: <b id="bankRebirths">0</b> · Шанс удачи: <b id="luckPct">0%</b></div>
+      <p class="rebirth-desc">Каждое перерождение повышает удачу: чаще выпадают комбинации в слотах, лучше карты в блэкджеке и покере, выигрышные числа в рулетке, высокие множители в колесе, плинко и краше, а также подсказки удачи в костях и хайло. После перерождения начинается новая игра: баланс сбрасывается до 100 ₽, кредит и депозит обнуляются, статистика очищается — остаётся только повышенная удача.</p>
+      <button id="btnRebirth" class="btn gold block">✨ Переродиться за 1 000 000 ₽</button>
+    </div>
+  </div>
+</div>
+
+<div id="cheatModal" class="modal-overlay hidden">
+  <div class="modal modal-cheat">
+    <div class="modal-head">
+      <h3>🎮 Панель читов</h3>
+      <button id="btnCloseCheats" class="btn ghost">✕</button>
+    </div>
+    <div class="cheat-row">
+      <input id="cheatAmount" type="number" min="1" step="1" placeholder="Сумма">
+      <button id="btnCheatAdd" class="btn gold">➕ Добавить денег</button>
+    </div>
+    <div class="cheat-row">
+      <button id="btnCheatAdd1000" class="btn gold">+1000 ₽</button>
+      <button id="btnCheatAdd10000" class="btn gold">+10000 ₽</button>
+      <button id="btnCheatClearCredit" class="btn pink">Списать долг</button>
+    </div>
+  </div>
+</div>
+
+<div id="historyModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h3>📜 История операций</h3>
+      <button id="btnCloseHistory" class="btn ghost">✕</button>
+    </div>
+    <div id="historyList" class="log-list"></div>
+  </div>
+</div>
+
+<div id="statsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h3>📊 Статистика по играм</h3>
+      <button id="btnCloseStats" class="btn ghost">✕</button>
+    </div>
+    <div class="stats-scroll">
+      <table class="stats-table">
+        <thead>
+          <tr><th>Игра</th><th>Сыграно</th><th>Побед</th><th>Поставлено</th><th>Возврат</th><th>RTP</th><th>Винрейт</th><th>Макс. выигрыш</th></tr>
+        </thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="games.js"></script>
+</body>
+</html>
