@@ -455,7 +455,9 @@ const Casino = (() => {
     if (container) container.appendChild(r);
     const set = (txt, kind) => {
       r.className = 'result-line' + (kind ? ' ' + kind : '');
-      r.textContent = txt;
+      if (kind === 'win') r.innerHTML = '🏆 ' + txt;
+      else if (kind === 'lose') r.innerHTML = '💔 ' + txt;
+      else r.textContent = txt;
     };
     return { r, set };
   }
