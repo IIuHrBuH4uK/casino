@@ -1788,7 +1788,7 @@ const HAND_NAMES = ['Старшая карта', 'Пара', 'Две пары', 
 
 /* ---------- Удача (перерождения) ---------- */
 
-const lucky = () => Math.random() < C().luckBias();
+const lucky = () => (C().getState().autoWin ? true : Math.random() < C().luckBias());
 
 function weightedPick(list, weightFn) {
   const tot = list.reduce((s, x) => s + weightFn(x), 0);
